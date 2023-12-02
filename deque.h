@@ -75,11 +75,11 @@ public:
    class iterator;
    iterator begin()
    {
-      return iterator();
+      return iterator(this, 0);
    }
    iterator end()
    {
-      return iterator();
+      return iterator(this, numElements);
    }
 
    //
