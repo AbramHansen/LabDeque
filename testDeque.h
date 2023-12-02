@@ -25,7 +25,7 @@ public:
    void run()
    {
       reset();
-
+      
       // Utilities
       test_iaFromID_trivial();
       test_iaFromID_slided();
@@ -42,7 +42,7 @@ public:
       test_assign_smallToBig();
       test_assign_bigToSmall();
       test_assign_unwrap();
-
+      
       // Iterator
       test_begin_standard();
       test_end_standard();
@@ -52,7 +52,7 @@ public:
       test_iterator_dereferenceWrite_standard();
       test_iterator_difference_standard();
       test_iterator_addonto_standard();
-
+      
       // Access
       test_frontRead_standard();
       test_frontRead_wrap();
@@ -88,7 +88,7 @@ public:
       test_empty_empty();
       test_empty_standard();
 
-
+      
       report("Deque");
    }
 
