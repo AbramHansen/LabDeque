@@ -23,6 +23,8 @@
 #include <cassert>
 #include <utility>
 
+#include <iostream>
+
 class TestDeque;    // forward declaration for TestDeque unit test class
 
 namespace custom
@@ -51,6 +53,10 @@ public:
    //
    deque() 
    { 
+      data = new T[1];
+      numCapacity = 1;
+      this->iaFront = 0;
+      this->numElements = 0;
    }
    deque(int newCapacity);
    deque(const deque <T> & rhs);
@@ -97,6 +103,8 @@ public:
    //
    void clear()
    { 
+      numElements = 0;
+      iaFront = 0;
    }
    void pop_front();
    void pop_back();
@@ -106,11 +114,11 @@ public:
    //
    size_t size() const 
    { 
-      return 99; 
+      return numElements; 
    }
    bool empty() const 
    { 
-      return false; 
+      return numElements == 0; 
    }
 
    
@@ -120,10 +128,10 @@ private:
    int iaFromID(int id) const
    {
       int ia;
-      assert(0 <= id && id < numElements);
-      assert(0 <= iaFront && iaFront < numCapacity);
+      //assert(0 <= id && id < numElements);
+      //assert(0 <= iaFront && iaFront < numCapacity);
       ia = (id + iaFront) % numCapacity;
-      assert(0 <= ia && ia < numCapacity);
+      //assert(0 <= ia && ia < numCapacity);
       return ia;
    }
    void resize(int newCapacity = 0);
@@ -151,12 +159,18 @@ public:
    //
    iterator()
    {
+      this->pDeque = nullptr;
+      id = 0;
    }
    iterator(custom::deque<T> *pDeque, int id)
    {
+      this->pDeque = pDeque;
+      this->id = id;
    }
    iterator(const iterator& rhs)
    {
+      this->pDeque = rhs.pDeque;
+      this->id = rhs.id;
    }
 
    //
@@ -164,25 +178,27 @@ public:
    //
    iterator& operator = (const iterator& rhs)
    {
+      this->pDeque = rhs.pDeque;
+      this->id = rhs.id;
       return *this;
    }
 
    //
    // Compare
    //
-   bool operator == (const iterator& rhs) const { return true; }
-   bool operator != (const iterator& rhs) const { return true; }
+   bool operator == (const iterator& rhs) const { return id == rhs.id; }
+   bool operator != (const iterator& rhs) const { return id != rhs.id; }
 
    // 
    // Access
    //
    const T & operator * () const
    {
-      return *(new T);
+      return pDeque->data[pDeque->iaFromID(id)];
    }
    T& operator * () 
    {
-      return *(new T);
+      return pDeque->data[pDeque->iaFromID(id)];
    }
 
    // 
@@ -190,27 +206,34 @@ public:
    //
    int operator - (iterator it) const
    {
-      return 99;
+      return id - it.id;
    }
    iterator& operator += (int offset)
    {
+      id += offset;
       return *this;
    }
    iterator& operator ++ ()
    {
+      ++id;
       return *this;
    }
    iterator operator ++ (int postfix)
    {
-      return *this;
+      iterator temp(*this);
+      ++id;
+      return temp;
    }
    iterator& operator -- ()
    {
+      --id;
       return *this;
    }
    iterator  operator -- (int postfix)
    {
-      return *this;
+      iterator temp(*this);
+      --id;
+      return temp;
    }
 
 private:
@@ -251,13 +274,19 @@ deque <T> :: deque(const deque <T> & rhs)
 template <class T>
 deque <T> & deque <T> :: operator = (const deque <T> & rhs)
 {
-   this->data = rhs.data;
-   this->numCapacity = rhs.numCapacity;
+   if (rhs.numElements > this->numCapacity)
+      resize(rhs.numElements);
+
+   for (int i = 0; i < rhs.numElements; ++i)
+   {
+      this->data[i] = rhs.data[rhs.iaFromID(i)];
+   }
+
    this->numElements = rhs.numElements;
-   this->iaFront = rhs.iaFront;
+   this->iaFront = 0;
+
    return *this;
 }
-
 
 /**************************************************
  * DEQUE :: FRONT
@@ -321,7 +350,7 @@ void deque <T> :: pop_front()
 {
    numElements--;
    iaFront++;
-   if (iaFront = numCapacity)
+   if (iaFront == numCapacity)
       iaFront = 0;
 }
 
@@ -342,6 +371,13 @@ void deque <T> :: push_back(const T & t)
 template <class T>
 void deque <T> :: push_front(const T & t) 
 {
+   if (numElements == numCapacity)
+      resize(numCapacity * 2);
+   iaFront--;
+   if (iaFront < 0)
+      iaFront = numCapacity - 1;
+   data[iaFront] = t;
+   numElements++;
 }
 
 /****************************************************
@@ -349,17 +385,21 @@ void deque <T> :: push_front(const T & t)
  * Resize the deque so the numCapacity matches the newCapacity
  ***************************************************/
 template <class T>
-void deque <T> :: resize(int newCapacity) 
+void deque<T>::resize(int newCapacity)
 {
-   T* dataNew = new T[newCapacity];
+    T *newData = new T[newCapacity];
 
-   for (int id = 0; id < numElements; id++)
-   {
-      dataNew[id] = std::move(data[id]);
-   }
-   numCapacity = newCapacity;
-   iaFront = 0;
-   data = dataNew;
+    // Copy elements to the new array
+    for (size_t i = 0; i < numElements; ++i)
+    {
+        newData[i] = data[iaFromID(i)];
+    }
+
+    delete[] data;
+    data = newData; 
+    numCapacity = newCapacity;
+    iaFront = 0; 
+
 }
 
 } // namespace custom
